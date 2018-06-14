@@ -57,7 +57,7 @@ void setup() {
 }
 
 //#########################################################################################
-void loop() { // this will never run!
+void loop() { 
   Display_QRcode(25,75,"Hello World!\n\nG6EJD");
   Display_QRcode(225,75,"http://example.com/");
   gfx.commit();
@@ -65,8 +65,9 @@ void loop() { // this will never run!
   Clear_Screen();
 }
 
+//#########################################################################################
 void Display_QRcode(int offset_x, int offset_y, const char* Message){
-  #define element_size 5
+  #define element_size 4
   // Create the QR code ~120 char maximum
   uint8_t qrcodeData[qrcode_getBufferSize(3)];
   qrcode_initText(&qrcode, qrcodeData, 3, 0, Message);
@@ -74,17 +75,17 @@ void Display_QRcode(int offset_x, int offset_y, const char* Message){
     for (int x = 0; x < qrcode.size; x++) {
       if (qrcode_getModule(&qrcode, x, y)) {
         gfx.setColor(EPD_BLACK);
-        gfx.fillRect(x*5+offset_x,y*5+offset_y,element_size,element_size);
+        gfx.fillRect(x*element_size+offset_x,y*element_size+offset_y,element_size,element_size);
       }
       else 
       {
         gfx.setColor(EPD_WHITE);
-        gfx.fillRect(x*5+offset_x,y*5+offset_y,element_size,element_size);
+        gfx.fillRect(x*element_size+offset_x,y*element_size+offset_y,element_size,element_size);
       }
     }
   }
 }
-
+//#########################################################################################
 void Clear_Screen(){
   gfx.fillBuffer(EPD_WHITE);
   gfx.commit();
