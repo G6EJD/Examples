@@ -1,4 +1,4 @@
-/* ESP32 e-paper display
+/* ESP QRcode display on an e-paper
   ####################################################################################################################################
   This software, the ideas and concepts is Copyright (c) David Bird 2018. All rights to this software are reserved.
 
@@ -22,7 +22,7 @@
 #include "EPD_WaveShare_42.h"  // Copyright (c) 2017 by Daniel Eichhorn https://github.com/ThingPulse/minigrafx
 #include "MiniGrafx.h"         // Copyright (c) 2017 by Daniel Eichhorn https://github.com/ThingPulse/minigrafx
 #include "DisplayDriver.h"     // Copyright (c) 2017 by Daniel Eichhorn https://github.com/ThingPulse/minigrafx
-#include "qrcode.h"            // Copyright (c)
+#include "qrcode.h"            // Copyright (c) //https://github.com/ricmoo/qrcode/
 
 #define SCREEN_WIDTH  400.0    // Set for landscape mode, don't remove the decimal place!
 #define SCREEN_HEIGHT 300.0
@@ -31,7 +31,7 @@
 #define EPD_WHITE 1
 uint16_t palette[] = { 0, 1 };
 
-// pins_arduino.h, e.g. LOLIN32 LITE
+// pins_arduino.h, e.g. LOLIN32 
 static const uint8_t EPD_BUSY = 4;
 static const uint8_t EPD_SS   = 5;
 static const uint8_t EPD_RST  = 16;
@@ -45,7 +45,7 @@ MiniGrafx gfx = MiniGrafx(&epd, BITS_PER_PIXEL, palette);
 
 //################# LIBRARIES ##########################
 String version = "1.0";       // Version of this program
-//################ VARIABLES ###########################
+//################ VARIABLES  ##########################
 
 QRCode qrcode;
 
@@ -57,20 +57,29 @@ void setup() {
 }
 
 //#########################################################################################
-void loop() { 
-  Display_QRcode(25,75,"Hello World!\n\nG6EJD");
-  Display_QRcode(225,75,"http://example.com/");
+void loop() {
+  //Display_QRcode(x,y,element_size,QRcode Size,Error Detection/Correction Level,"string for encoding");
+  gfx.drawString(150,10,"QRcode Generation Example");
+  Display_QRcode(25,25,3,3,3,"Hello World!\n\nG6EJD");
+  Display_QRcode(25,175,3,4,1,"http://example.com/");
+  Display_QRcode(225,75,2,12,1,"Chapter-1 The quick brown fox jumps over the lazy dog's back\n\rChapter-2 The quick brown fox jumps over the lazy dog's back again\n\rChapter-3 The quick brown fox jumps over the lazy dog's back again and again");
   gfx.commit();
-  delay(60000);
+  delay(30000); // Delay before we do it again
   Clear_Screen();
 }
 
 //#########################################################################################
-void Display_QRcode(int offset_x, int offset_y, const char* Message){
-  #define element_size 4
-  // Create the QR code ~120 char maximum
-  uint8_t qrcodeData[qrcode_getBufferSize(3)];
-  qrcode_initText(&qrcode, qrcodeData, 3, 0, Message);
+void Display_QRcode(int offset_x, int offset_y, int element_size, int QRsize, int ECC_Mode, const char* Message){
+  // QRcode capacity examples Size-12  65 x 65 LOW      883 535 367 
+  //                                           MEDIUM   691 419 287 
+  //                                           QUARTILE 489 296 203 
+  //                                           HIGH     374 227 155 
+  uint8_t qrcodeData[qrcode_getBufferSize(QRsize)];
+  //ECC_LOW, ECC_MEDIUM, ECC_QUARTILE and ECC_HIGH. Higher levels of error correction sacrifice data capacity, but ensure damaged codes remain readable.
+  if (ECC_Mode%4 == 0) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_LOW, Message);
+  if (ECC_Mode%4 == 1) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_MEDIUM, Message);
+  if (ECC_Mode%4 == 2) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_QUARTILE, Message);
+  if (ECC_Mode%4 == 3) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_HIGH, Message);
   for (int y = 0; y < qrcode.size; y++) {
     for (int x = 0; x < qrcode.size; x++) {
       if (qrcode_getModule(&qrcode, x, y)) {
@@ -89,6 +98,6 @@ void Display_QRcode(int offset_x, int offset_y, const char* Message){
 void Clear_Screen(){
   gfx.fillBuffer(EPD_WHITE);
   gfx.commit();
-  delay(2000);
+  delay(4000);
 }
 
